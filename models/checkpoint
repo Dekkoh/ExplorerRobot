@@ -1,0 +1,6 @@
+model_checkpoint_path: "test.ckpt-2540"
+all_model_checkpoint_paths: "test.ckpt-2500"
+all_model_checkpoint_paths: "test.ckpt-2510"
+all_model_checkpoint_paths: "test.ckpt-2520"
+all_model_checkpoint_paths: "test.ckpt-2530"
+all_model_checkpoint_paths: "test.ckpt-2540"
