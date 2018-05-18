@@ -6,10 +6,9 @@ from nxt.sensor import *
 from nxt.motor import *
 
 print('looking for NXT ... could take 15 seconds')
-b = nxt.locator.find_one_brick()
+b = nxt.find_one_brick()
 
 m_left = Motor(b, PORT_B)
-
 m_right = Motor(b, PORT_A)
 
 both = nxt.SynchronizedMotors(m_left, m_right, 0)
