@@ -62,9 +62,6 @@ def randomInitialDir():
     direction = random.randint(1,4)
     return direction
 
-def reachableSpaces(initialPosition):
-    global areaMap
-
 
 def printValidation(currentPos, direction):
 

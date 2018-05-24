@@ -1,0 +1,115 @@
+Robô explorador com treinamento por reforço
+
+O que é treinamento por reforço
+Qual é a primeira coisa que vem a cabeça quando pensamos em treinamento por reforço? Alguém treinando sem parar para uma competição? Um aluno que está quase reprovando e precisa de aulas de reforço? Aprender com alguém que só usa pleonasmo? Bom, a melhor maneira de visualizar é com um exemplo. Imagine a seguinte situação: você, ser humano, precisa ler um livro de 30 capítulos em 30 dias. Ao mesmo tempo você gosta muito de chocolate e odeia muito jiló. Para te ajudar a terminar o livro, para cada dia que você ler um capítulo do livro, você come um pedaço de chocolate, e para cada dia que não ler você come um pedaço de jiló. A medida que você vai tentando ler o livro, o seu cérebro vai percebendo que ler um capítulo no dia é bom e não ler é ruim, e indiretamente o seu objetivo se torna maximizar a sua recompensa recebida. Passaram-se 30 dias e, infelizmente, você não conseguiu terminar o seu livro. Não tem problema, você pode tentar novamente começando o livro do zero, mas dessa vez o seu cérebro já começou a perceber que ler te tráz recompensa, então você vai conseguir ir um pouco mais longe, e da próxima vez um pouco mais longe e da próxima um pouco mais, até que, algum dia, você consegue atingir o seu objetivo de ler o livro em 30 dias.
+Agora vamos pensar no nosso problema de treinar um robô para explorar o ambiente sem bater em nada. Temos um sensor de presença localizado na parte frontal e três ações disponíveis: andar para frente, girar horário e girar anti horário. Cada ação gera uma consequencia. Podemos pensar que andar para fente e não bater em nada é o nosso chocolate, e andar para frente e bater em algo é o nosso jiló. Mas o girar seria o que? Girar não é tão bom quanto andar, simplesmente pelo fato que ao girar o robô não sai do lugar, mas não é tão ruim quanto bater, então podemos supor que girar seria um chocolatinho, porque apesar do robo não andar, ele ganha informação do ambiente e desvia de possíveis obstáculos.
+
+Ambiente de treinamento
+Arquivo trainingMap.py do repositório
+Para não complicar as nossas vidas, o ambiente de treinamento é uma matriz 100x100 apenas com 1 e 0, onde 1 representa paredes e 0 espaço vazio, além disso a bordas do mapa são sempre paredes
+
+
+			import random
+			import numpy as np
+			from scipy.sparse import rand
+
+			mapSize = [100, 100]
+			mapDensity = 0.2
+			areaMap = np.ones([mapSize[0], mapSize[1]])
+
+			def generateMap():
+			    newMap = rand(mapSize[0], mapSize[1], density=mapDensity)
+			    newMap.data[:] = 1
+			    newMap = np.array(newMap.A)
+			    newMap = newMap.astype(int)
+			    newMap[:][0] = 1
+			    newMap[:][mapSize[1] - 1] = 1
+			    newMap[:,0] = 1
+			    newMap[:,mapSize[0] - 1] = 1
+
+			    global areaMap
+			    areaMap = newMap
+
+o nosso robô é inicializado em uma posição aleatório e com uma direção aleatória, onde a direção 1 é para cima, 2 para direita, 3 para baixo e 4 para esquerda
+
+			def randomInitalPos():
+
+			    done = False
+			    currentPos = [-1, -1]
+
+			    while(not done):
+			        i = random.randint(1,len(areaMap) - 2)
+			        j = random.randint(1,len(areaMap[0]) - 2)
+			        if (areaMap[i][j] == 0):
+			            currentPos = [i, j]
+			            done = True
+
+			    return currentPos
+
+
+			def randomInitialDir():
+			    direction = random.randint(1,4)
+			    return direction
+
+para simular o nosso sensor, o robô sempre tem a informação do quadrado a sua frente
+
+			def getState(currentPos, direction):
+
+			    state = np.zeros([1,1])
+
+			    if (direction == 1):
+			        state[0][0] = areaMap[currentPos[0] - 1][currentPos[1]]
+			    elif (direction == 2):
+			        state[0][0] = areaMap[currentPos[0]][currentPos[1] + 1]
+			    elif (direction == 3):
+			        state[0][0] = areaMap[currentPos[0] + 1][currentPos[1]]
+			    elif (direction == 4):
+			        state[0][0] = areaMap[currentPos[0]][currentPos[1] - 1]
+
+			    return state
+
+e para simular um "passo" é necessário saber a posiçã atual, a direção atual e qual das 3 ações ele vai tomar, então é retornado o novo estado do sensor, a recompensa pela ação, se o robô bateu ou não, a nova posição e a novoa direção. As recompensas são definidas por +5 se o robô andou e não bateu, +1 se o robô girou para qualquer das direções, e -30 se o robô andou para frente e bateu.
+
+			def nextStep(nextChoice, currentPos, direction):
+			    lastPos = currentPos
+			    lastDir = direction
+			    lastState = getState(lastPos, lastDir)
+
+			    if (nextChoice == 'forward'):
+			        if (direction == 1):
+			            currentPos[0] -= 1
+			        elif (direction == 2):
+			            currentPos[1] += 1
+			        elif (direction == 3):
+			            currentPos[0] += 1
+			        elif (direction == 4):
+			            currentPos[1] -= 1
+			    elif (nextChoice == 'right'):
+			        direction += 1
+			        if (direction > 4):
+			            direction = 1
+			    elif (nextChoice == 'left'):
+			        direction -= 1
+			        if (direction < 1):
+			            direction = 4
+
+			    state = np.zeros(1)
+
+			    if (areaMap[currentPos[0]][currentPos[1]] == 1):
+			        done = True
+			        direction = lastDir
+			        currentPos = lastPos
+			        state = lastState
+			        reward = -30
+			    else:
+			        done = False
+			        state = getState(currentPos, direction)
+			        if (nextChoice == 'forward'):
+			            reward = 5
+			        else:
+			            reward = 1
+
+			    return state, reward, done, currentPos, direction
+
+Rede Neural para o treinamento
+Arquivo neuralNetworkTraining.py
