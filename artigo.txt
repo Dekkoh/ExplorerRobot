@@ -68,7 +68,7 @@ para simular o nosso sensor, o robô sempre tem a informação do quadrado a sua
 
 			    return state
 
-e para simular um "passo" é necessário saber a posiçã atual, a direção atual e qual das 3 ações ele vai tomar, então é retornado o novo estado do sensor, a recompensa pela ação, se o robô bateu ou não, a nova posição e a novoa direção. As recompensas são definidas por +5 se o robô andou e não bateu, +1 se o robô girou para qualquer das direções, e -30 se o robô andou para frente e bateu.
+e para simular um "passo" é necessário saber a posição atual, a direção atual e qual das 3 ações ele vai tomar, então é retornado o novo estado do sensor, a recompensa pela ação, se o robô bateu ou não, a nova posição e a nova direção. As recompensas são definidas por +5 se o robô andou e não bateu, +1 se o robô girou para qualquer das direções, e -30 se o robô andou para frente e bateu.
 
 			def nextStep(nextChoice, currentPos, direction):
 			    lastPos = currentPos
@@ -113,3 +113,142 @@ e para simular um "passo" é necessário saber a posiçã atual, a direção atu
 
 Rede Neural para o treinamento
 Arquivo neuralNetworkTraining.py
+Inicialmente definimos uma série de variáveis de ambiente: número máximo de épocas, número de episódios em um época, número de ações disponíveis, recompensa média, época atual, tamanha do batch, número de sensores e as ações disponíveis
+
+            import tensorflow as tf
+            import numpy as np
+            import random
+
+            import trainingMap
+
+
+			# Environment Parameters
+			n_epochs = 5000
+			n = 0
+			n_actions = 3
+			average = []
+			step = 1
+			batch_size = 5000
+			sensor_number = 1
+
+            # Define our three actions of moving forward, turning left & turning right
+            choice = ['forward', 'left', 'right']
+
+Em seguida definimos alguns parâmetros que serão utilizados em nossa rede neural. Alpha é a nossa taxa de aprendizado (learning rate) e gama é o nosso desconto da recompensa (reward discount)
+
+            # Hyper Parameters
+            alpha = 1e-4
+            gamma = 0.99
+            normalize_r = True
+            save_path='models/test.ckpt'
+            value_scale = 0.5
+            entropy_scale = 0.00
+            gradient_clip = 40
+
+Sempre que o robô toma uma ação, ele recebe uma recompensa relacionada a ação tomada. Cada recompensa passa por uma função de desconto. Essa função de desconto nos ajuda a comparar o quão bom é uma recompesa grande no futuro em relação a uma recompensa pequena no presente. Por exemplo: imagine que um indivíduo está tentando resolver um labirinto e chega em um momento que deve decidir entre um caminho curto que leva a uma recompensa pequena ou um caminho longo que leva a uma recompensa grande. Ajustando o gama é possível controlar qual dos dois caminhos este indivíduo deve escolher.
+
+            # Apply discount to episode rewards & normalize
+            def discount(r, gamma, normal):
+                discount = np.zeros_like(r)
+                G = 0.0
+                for i in reversed(range(0, len(r))):
+                    G = G * gamma + r[i]
+                    discount[i] = G
+                # Normalize 
+                if normal:
+                    mean = np.mean(discount)
+                    std = np.std(discount)
+                    if (std == 0):
+                        std = 0.001
+                    discount = (discount - mean) / (std)
+                return discount
+
+O próximo passo é construir a rede neural em si. Em nossa rede, o input é o estado do sensor e o output é a confiança de cada ação ser a melhor escolha para o determinado estado. A rede é composta por uma camada de input com o número de neurônios igual ao número de sensores, uma camada densa composta por 256 neurônios e duas camadas de saída, uma composta por 3 neurônios (logits) e outra por 1 neurônio (value). As camadas logits e value possuem a mesma camada antecessora, e serão utilizadas, respectivamente, nas funções policy approximation e value approximation. Estas funções fazem aproximações numéricas para calcular o custo e atualizar o pesos da rede neural para melhorar a confiança na decisão das ações futuras.
+
+            # Layers
+            fc = 256
+            activ = tf.nn.elu
+
+            # Tensorflow Variables
+            X = tf.placeholder(tf.float32, (None, sensor_number), name='X')
+            Y = tf.placeholder(tf.int32, (None,), name='actions')
+            R = tf.placeholder(tf.float32, (None,), name='reward')
+            N = tf.placeholder(tf.float32, (None), name='episodes')
+            D_R = tf.placeholder(tf.float32, (None,), name='discounted_reward')
+
+            dense = tf.layers.dense(
+                    inputs = X, 
+                    units = fc, 
+                    activation = activ,
+                    name = 'fc')
+
+            logits = tf.layers.dense(
+                     inputs = dense, 
+                     units = n_actions, 
+                     name='logits')
+
+            value = tf.layers.dense(
+                    inputs=dense, 
+                    units = 1, 
+                    name='value')
+
+            calc_action = tf.multinomial(logits, 1)
+            aprob = tf.nn.softmax(logits)
+
+            tf.trainable_variables()
+
+Agora que temos a nossa rede neural, precisamos criar um indivíduo. Para cada indivíduo será armazenado o estado do sensor em cada passo, as suas ações tomadas e as recompensas recebidas. O momento que um indivíduo bate em alguma parede define o fim de um episódio, e nesse momento é criado um novo indivíduo com uma nova posição e uma nova direção. Uma geração é definida por um conjunto de indivíduos tal que no fim do último indivíduo a soma de ações feitas por eles é maior que o batch_size, estabelicida inicialmente por 5000. Ao final de uma geração, os dados armazenados são retornados e servirão para atualizar os pesos da rede neural.
+
+            def rollout(batch_size):
+                
+                states, actions, rewards, rewardsFeed, discountedRewards = [], [], [], [], []
+                episode_num = 1
+                action_repeat = 1
+                reward = 0
+
+                trainingMap.generateMap()
+                currentPos = trainingMap.randomInitalPos()
+                direction = trainingMap.randomInitialDir()
+                state = trainingMap.getState(currentPos, direction)
+                
+                while True: 
+                    # Run State Through Policy & Calculate Action
+                    feed = {X: state}
+                    prob = sess.run(aprob, feed_dict=feed)
+                    action = np.random.choice([0,1,2], p=prob[0])
+                    
+                    # Perform Action
+                    for i in range(action_repeat):
+                        state2, reward2, done, currentPos, direction = trainingMap.nextStep(choice[action], currentPos, direction)
+                        reward += reward2
+                        if done:
+                            break
+                    
+                    # Store Results
+                    states.append(state[0])
+                    rewards.append(reward)
+                    actions.append(action)
+                    
+                    # Update Current State
+                    reward = 0
+                    state = state2.reshape(1, sensor_number)
+                    
+                    if done:
+                        # Track Discounted Rewards
+                        rewardsFeed.append(rewards)
+                        discountedRewards.append(discount(rewards, gamma, normalize_r))
+                        
+                        if len(np.concatenate(rewardsFeed)) > batch_size:
+                            break
+                            
+                        # Reset Environment
+                        currentPos = trainingMap.randomInitalPos()
+                        direction = trainingMap.randomInitialDir()
+                        state = trainingMap.getState(currentPos, direction)
+                        rewards = []
+                        episode_num += 1
+                                     
+                return np.stack(states), np.stack(actions), np.concatenate(rewardsFeed), np.concatenate(discountedRewards), episode_num
+
+
+Já temos o nosso mapa de treinamento e o nosso indivíduo
