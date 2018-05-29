@@ -197,7 +197,7 @@ O próximo passo é construir a rede neural em si. Em nossa rede, o input é o e
 
             tf.trainable_variables()
 
-Agora que temos a nossa rede neural, precisamos criar um indivíduo. Para cada indivíduo será armazenado o estado do sensor em cada passo, as suas ações tomadas e as recompensas recebidas. O momento que um indivíduo bate em alguma parede define o fim de um episódio, e nesse momento é criado um novo indivíduo com uma nova posição e uma nova direção. Uma geração é definida por um conjunto de indivíduos tal que no fim do último indivíduo a soma de ações feitas por eles é maior que o batch_size, estabelicida inicialmente por 5000. Ao final de uma geração, os dados armazenados são retornados e servirão para atualizar os pesos da rede neural.
+Agora que temos a nossa rede neural, precisamos criar um indivíduo. Para cada indivíduo será armazenado o estado do sensor em cada passo, as suas ações tomadas e as recompensas recebidas. O momento que um indivíduo bate em alguma parede define o fim de um episódio, e nesse momento é criado um novo indivíduo com uma nova posição e uma nova direção. Uma geração é definida por um conjunto de indivíduos tal que no fim do último indivíduo a soma de ações feitas por eles é maior que o batch_size, estabelicida inicialmente em 5000. Ao final de uma geração, os dados armazenados são retornados e servirão para atualizar os pesos da rede neural.
 
             def rollout(batch_size):
                 
@@ -251,4 +251,5 @@ Agora que temos a nossa rede neural, precisamos criar um indivíduo. Para cada i
                 return np.stack(states), np.stack(actions), np.concatenate(rewardsFeed), np.concatenate(discountedRewards), episode_num
 
 
-Já temos o nosso mapa de treinamento e o nosso indivíduo
+Já temos o nosso mapa de treinamento e o nosso indivíduo, então vamos definir como o nosso robô irá aprender. Basicamente queremos que em cada geração os pesos das rede neural sejam atualizados a fim de melhorar a confiança nas ações que serão tomadas, ou seja, teremos que minimizar o custo calculado.
+O custo é calculado a partir da função sparse_softmax_cross_entropy. 
