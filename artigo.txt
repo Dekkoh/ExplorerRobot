@@ -113,7 +113,7 @@ e para simular um "passo" é necessário saber a posição atual, a direção at
 
 Rede Neural para o treinamento
 Arquivo neuralNetworkTraining.py
-Inicialmente definimos uma série de variáveis de ambiente: número máximo de épocas, número de episódios em um época, número de ações disponíveis, recompensa média, época atual, tamanha do batch, número de sensores e as ações disponíveis
+Inicialmente definimos uma série de variáveis de ambiente: número máximo de épocas, número de episódios em um época, número de ações disponíveis, recompensa média, época atual, tamanho do batch, número de sensores e as ações disponíveis
 
             import tensorflow as tf
             import numpy as np
@@ -251,5 +251,9 @@ Agora que temos a nossa rede neural, precisamos criar um indivíduo. Para cada i
                 return np.stack(states), np.stack(actions), np.concatenate(rewardsFeed), np.concatenate(discountedRewards), episode_num
 
 
-Já temos o nosso mapa de treinamento e o nosso indivíduo, então vamos definir como o nosso robô irá aprender. Basicamente queremos que em cada geração os pesos das rede neural sejam atualizados a fim de melhorar a confiança nas ações que serão tomadas, ou seja, teremos que minimizar o custo calculado.
-O custo é calculado a partir da função sparse_softmax_cross_entropy. 
+Já temos o nosso mapa de treinamento e o nosso indivíduo, então vamos definir como o nosso robô irá aprender. Em redes neurais, existe o conceito de custo que representa o quão bom o seu modelo está para um conjunto determinado de dados. Em nosso problema o custo representa o quão duvidoso o robô está em relação a decisão a ser tomada, portanto queremos que em cada geração os pesos da rede neural sejam atualizados a fim de melhorar a confianção nas escolhas das ações, minimizando o custo. O custo é calculado a partir da função sparse_softmax_cross_entropy, essa função assume que as nossas ações disponíveis sejam um conjunto finito e contável e o seu resultado é multiplicado pela diferença entre a recompensa descontada e a saída da camada value, resultando no custo do gradiente de policy approximation. O custo de value approximation é calculado 
+
+
+
+
+Em nosso problema queremos que o nosso robô tenha a confiança sempre proxima de 100% em sua próxima ação, ou seja, temos que atulizar os pesos da rede neural para que  Basicamente queremos que em cada geração os pesos da rede neural sejam atualizados a fim de melhorar a confiança nas ações que serão tomadas. Idealmente queremos que em todas as decisões, o nosso robô tenha 100% de confiança que a decisão a ser tomada seja a melhorO inverso confiança pode ser representada em um número chamado custo, ou seja, a medida que a confiança sobre uma ação vai se aproximando de 100% o custo vai tendendo a zero. O custo é calculado a partir da função sparse_softmax_cross_entropy, essa função assume que as nossas ações disponíveis sejam um conjunto finito e contável e o seu resultado é multiplicado pela diferença entre a recompensa descontada a saída da camada value
