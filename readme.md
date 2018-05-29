@@ -71,12 +71,11 @@ Para este projeto foram utilizadas três camadas na rede neural, sendo elas:
  - Camada intermediária, que contém os neurônios de processamento da rede
  - Camada de Output(Saída)   
 
-Como citado anteriormente foi utilizado o treinamento por reforço neste projeto, onde em um determinado tempo t, o agente que está em um estado s, executa uma ação a, vai para um estado s, recebe uma recompensa r, que resumindo quer dizer que a cada iteração com o ambiente o nosso robo tende a mudar seu estado recebendo recompensas positivas e ou negativas dependendo de sua escolha. 
+Como citado anteriormente foi utilizado o treinamento por reforço neste projeto, onde em um determinado tempo t, o agente que está em um estado s[t], executa uma ação a[t], vai para um estado s[t+1], recebe uma recompensa r[t], que resumindo quer dizer que a cada iteração com o ambiente o nosso robo tende a mudar seu estado recebendo recompensas positivas e ou negativas dependendo de sua escolha. 
 
-Por fim, utilizamos também para efeito de correção dos pesos da nossa rede o modo `Batch` que por sua vez faz uma única correção por ciclo, gerando o erro médio para que as correções sejam feitas.
+Por fim, utilizamos também para efeito de correção dos pesos da nossa rede o `Gradiente descendente estocástico` que por sua vez faz uma única correção por ciclo, gerando o erro médio para que as correções sejam feitas.
 
 > Este ciclo de treinamento é repetido até que se tenha um resultado satisfatório com base em métricas definidas via código.
-
 
 ## Programa Principal (Robo)
 
