@@ -5,9 +5,9 @@ Utilizamos a biblioteca TensorFlow para desenvolver o aprendizado do Robo com a 
 
 ## Pré-Requisitos
 
-Raspberry pi 3
-Mindstorm NXT
-Sensor Ultra-Sônico
+- Raspberry pi 3
+- Mindstorm NXT
+- Sensor Ultra-Sônico
 
 ## Começando ...
 
