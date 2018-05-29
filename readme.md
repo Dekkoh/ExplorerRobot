@@ -1,7 +1,7 @@
 # Explorer Robot - Inteligencia Artificial
 
-Com base numa pesquisa realizada no FTI sobre inteligencia artificial, foi proposto um projeto cuja sua funcão seria implantar uma IA dentro de um robo, para que o mesmo se locomovesse pelo espaço da Hello World, explorando os lugares com um único sensor de presença ultra-sônico, sem que ele batesse nas paredes e ou móveis presentes.
-Utilizamos a biblioteca TensorFlow para desenvolver o aprendizado do Robo com a técnica _Reinforcment Learning_ que tem por objetivo fazer com que a IA cumpra algumas metas oferecendo recompensar no caso de um movimento correto e também punições quando o objetivo deixa de ser atingido.
+Com base numa pesquisa realizada no FTI sobre inteligencia artificial, foi proposto um projeto cuja sua funcão seria implantar uma IA dentro de um robo, para que o mesmo se locomovesse pelo espaço da Hello World, explorando os lugares com um único sensor de presença ultra-sônico, sem que ele bata nas paredes e ou móveis presentes.
+Utilizamos a biblioteca TensorFlow para desenvolver o aprendizado do Robo com a técnica **_Reinforcement Learning_** que tem por objetivo fazer com que a IA cumpra algumas metas oferecendo recompensar no caso de um movimento correto e também punições quando o objetivo deixa de ser atingido.
 
 ## Pré-Requisitos
 
@@ -9,7 +9,7 @@ Raspberry pi 3
 Mindstorm NXT
 Sensor Ultra-Sônico
 
-## Começando
+## Começando ...
 
 ### Configurações
 
@@ -54,7 +54,28 @@ Este projeto foi desenvolvido em Pyhton em conjunto com algumas de suas bibliote
 
 ## Rede Neural
 
-###TODO
+> É nessessário um breve conhecimento sobre `Reinforcement Learn` para a realização deste projeto, com base nisso seguem alguns links com o intuito de clarear um pouco sobre este universo, caso não conheça nada sobre o mundo de Inteligência Artificial:
+
+1. [https://www.oreilly.com/ideas/reinforcement-learning-with-tensorflow]
+
+2. [https://medium.com/emergent-future/simple-reinforcement-learning-with-tensorflow-part-0-q-learning-with-tables-and-neural-networks-d195264329d0]
+
+3. [http://conteudo.icmc.usp.br/pessoas/andre/research/neural/]
+
+4. [http://neuralnetworksanddeeplearning.com/chap1.html]
+
+Se seu conhecimento sobre o assunto seja suficiente, vamos para o que interessa.
+
+Para este projeto foram utilizadas três camadas na rede neural, sendo elas: 
+ - Camada de Input(entrada)
+ - Camada intermediária, que contém os neurônios de processamento da rede
+ - Camada de Output(Saída)   
+
+Como citado anteriormente foi utilizado o treinamento por reforço neste projeto, onde em um determinado tempo t, o agente que está em um estado s, executa uma ação a, vai para um estado s, recebe uma recompensa r, que resumindo quer dizer que a cada iteração com o ambiente o nosso robo tende a mudar seu estado recebendo recompensas positivas e ou negativas dependendo de sua escolha. 
+
+Por fim, utilizamos também para efeito de correção dos pesos da nossa rede o modo `Batch` que por sua vez faz uma única correção por ciclo, gerando o erro médio para que as correções sejam feitas.
+
+> Este ciclo de treinamento é repetido até que se tenha um resultado satisfatório com base em métricas definidas via código.
 
 
 ## Programa Principal (Robo)
