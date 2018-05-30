@@ -1,14 +1,16 @@
 ﻿# Robô explorador com treinamento por reforço
 >  Por Andre Tsuyoshi Sakiyama. 30 de Maio de 2018
+<br/>
 
-### O que é treinamento por reforço
+## O que é treinamento por reforço
 
 Qual é a primeira coisa que vem a cabeça quando pensamos em treinamento por reforço? Alguém treinando sem parar para uma competição? Um aluno que está quase reprovando e precisa de aulas de reforço? Aprender com alguém que só usa pleonasmo? Bom, a melhor maneira de visualizar é com um exemplo. Imagine a seguinte situação: você, ser humano, precisa ler um livro de 30 capítulos em 30 dias. Ao mesmo tempo você gosta muito de chocolate e odeia muito jiló. Para te ajudar a terminar o livro, para cada dia que você ler um capítulo do livro, você come um pedaço de chocolate, e para cada dia que não ler você come um pedaço de jiló. A medida que você vai tentando ler o livro, o seu cérebro vai percebendo que ler um capítulo no dia é bom e não ler é ruim, e indiretamente o seu objetivo se torna maximizar a sua recompensa recebida. Passaram-se 30 dias e, infelizmente, você não conseguiu terminar o seu livro. Não tem problema, você pode tentar novamente começando o livro do zero, mas dessa vez o seu cérebro já começou a perceber que ler te tráz recompensa, então você vai conseguir ir um pouco mais longe, e da próxima vez um pouco mais longe e da próxima um pouco mais, até que, algum dia, você consegue atingir o seu objetivo de ler o livro em 30 dias.
 
 Agora vamos pensar no nosso problema de treinar um robô para explorar o ambiente sem bater em nada. Temos um sensor de presença localizado na parte frontal e três ações disponíveis: andar para frente, girar horário e girar anti horário. Cada ação gera uma consequencia. Podemos pensar que andar para fente e não bater em nada é o nosso chocolate, e andar para frente e bater em algo é o nosso jiló. Mas o girar seria o que? Girar não é tão bom quanto andar, simplesmente pelo fato que ao girar o robô não sai do lugar, mas não é tão ruim quanto bater, então podemos supor que girar seria um chocolatinho, porque apesar do robo não andar, ele ganha informação do ambiente e desvia de possíveis obstáculos.
 
+<br/>
 
-### Ambiente de treinamento
+## Ambiente de treinamento
 
 *Arquivo ``trainingMap.py`` do repositório*
 Para não complicar as nossas vidas, o ambiente de treinamento é uma matriz 100x100 apenas com 1 e 0, onde 1 representa paredes e 0 espaço vazio, além disso a bordas do mapa são sempre paredes. Nesse caso podemos imaginar que o robô tem um tamanho x e que um passo sempre percorre uma distância igual ao seu comprimento.
@@ -123,8 +125,9 @@ def nextStep(nextChoice, currentPos, direction):
     return state, reward, done, currentPos, direction
 ```
 
+<br/>
 
-### Rede Neural para o treinamento
+## Rede Neural para o treinamento
 
 Utilizaremos a biblioteca Tensorflow para facilitar a criação de nossa rede neural. O Tensorflow é uma biblioteca de código aberto especializada em computação numérica e utiliza a representação orientada a grafos. Originalmente desenvolvido pelo time Google Brain, era aplicado para pesquisas em aprendizado de máquina e redes neurais profundas. A biblioteca possui uma flexibilidade para atuar em diferentes plataformas como CPUs, GPUs e TPUs e consegue ser aplicado desde de desktops até devices mobile. Hoje, inúmeras empresas utilizam o Tensorflow para aplicações como recomendação, predição, classificação, processamento de linguagem natural e reconhecimento de voz e imagem.
 
@@ -343,15 +346,17 @@ while step < n_epochs+1:
 
 Executando o arquivo ``neuralNetworkTraining.py`` iniciaremos o treinamento da rede neural. A cada 10 gerações, o arquivo salva a rede atual em models e este modelo pode ser utlizado para continuar um treinamento que foi interrompido ou para ser utilizado em alguma aplicação. No meu caso, eu deixei a rede treinando em CPU durante mais ou menos 7 horas, até chegar a geração 2540.
 
+<br/>
 
-### Simulação
+## Simulação
 
 Antes passar para um cenário real iremos para um simulador, onde será mais fácil visualizar a rede neural atuando sobre o comportamento do robô. O software que utilizaremos é o [V-REP](http://www.coppeliarobotics.com). Com este software é possível simular o robô, os sensores e os obstáculos. Com o v-rep abra a cena obstacle_avoid_3_sensors.ttt localizado na pasta scene, dê um play na cena e em algum terminal execute o arquivo ``simulationScript.py``, este arquivo carrega o ultimo modelo salvo e simula o comportamento do robô, lendo os sensores e tomando decisões, porém ele não atualiza os pesos da rede neural.
 
 TODO: Talvez colocar um GIF mostrando a simulação no v-rep, comparando o robô com o modelo da geração 0 e o robô da geração 2540
 
+<br/>
 
-### Testando
+## Testando
 
 Para a nosso situação real, utilizamos o Lego Mindstorms NXT, com um sensor utlrasônico em sua região frontal. O ambiente é uma sala com diversas mesas e cadeiras. Inicialmente é necessário se conectar ao Lego Mindstomrs via bluetooth e logo em seguida executar o arquivo ``main.py``. Este arquivo lê o sensor do robô e detecta objetos a uma distância de 50 cm. Com esses dados ele alimenta rede neural, recebe a ação que deve ser tomada e manda comando para os motores de acorda com a decisão feita.
 
