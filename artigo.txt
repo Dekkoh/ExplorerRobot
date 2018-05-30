@@ -6,7 +6,7 @@ Agora vamos pensar no nosso problema de treinar um robô para explorar o ambient
 
 Ambiente de treinamento
 Arquivo trainingMap.py do repositório
-Para não complicar as nossas vidas, o ambiente de treinamento é uma matriz 100x100 apenas com 1 e 0, onde 1 representa paredes e 0 espaço vazio, além disso a bordas do mapa são sempre paredes
+Para não complicar as nossas vidas, o ambiente de treinamento é uma matriz 100x100 apenas com 1 e 0, onde 1 representa paredes e 0 espaço vazio, além disso a bordas do mapa são sempre paredes. Nesse caso podemos imaginar que o robô tem um tamanho x e que um passo sempre percorre uma distância igual ao seu comprimento.
 
 
 			import random
@@ -30,7 +30,7 @@ Para não complicar as nossas vidas, o ambiente de treinamento é uma matriz 100
 			    global areaMap
 			    areaMap = newMap
 
-o nosso robô é inicializado em uma posição aleatório e com uma direção aleatória, onde a direção 1 é para cima, 2 para direita, 3 para baixo e 4 para esquerda
+O nosso robô é inicializado em uma posição aleatório e com uma direção aleatória, onde a direção 1 é para cima, 2 para direita, 3 para baixo e 4 para esquerda
 
 			def randomInitalPos():
 
@@ -51,7 +51,7 @@ o nosso robô é inicializado em uma posição aleatório e com uma direção al
 			    direction = random.randint(1,4)
 			    return direction
 
-para simular o nosso sensor, o robô sempre tem a informação do quadrado a sua frente
+Para simular o nosso sensor, o robô sempre tem a informação do quadrado a sua frente
 
 			def getState(currentPos, direction):
 
@@ -68,7 +68,7 @@ para simular o nosso sensor, o robô sempre tem a informação do quadrado a sua
 
 			    return state
 
-e para simular um "passo" é necessário saber a posição atual, a direção atual e qual das 3 ações ele vai tomar, então é retornado o novo estado do sensor, a recompensa pela ação, se o robô bateu ou não, a nova posição e a nova direção. As recompensas são definidas por +5 se o robô andou e não bateu, +1 se o robô girou para qualquer das direções, e -30 se o robô andou para frente e bateu.
+E para simular um "passo" é necessário saber a posição atual, a direção atual e qual das 3 ações ele vai tomar, então é retornado o novo estado do sensor, a recompensa pela ação, se o robô bateu ou não, a nova posição e a nova direção. As recompensas são definidas por +5 se o robô andou e não bateu, +1 se o robô girou para qualquer das direções, e -30 se o robô andou para frente e bateu.
 
 			def nextStep(nextChoice, currentPos, direction):
 			    lastPos = currentPos
@@ -112,6 +112,9 @@ e para simular um "passo" é necessário saber a posição atual, a direção at
 			    return state, reward, done, currentPos, direction
 
 Rede Neural para o treinamento
+
+Utilizaremos a biblioteca Tensorflow para facilitar a criação de nossa rede neural. O Tensorflow é uma biblioteca de código aberto especializada em computação numérica e utiliza a representação orientada a grafos. Originalmente desenvolvido pelo time Google Brain, era aplicado para pesquisas em aprendizado de máquina e redes neurais profundas. A biblioteca possui uma flexibilidade para atuar em diferentes plataformas como CPUs, GPUs e TPUs e consegue ser aplicado desde de desktops até devices mobile. Hoje, inúmeras empresas utilizam o Tensorflow para aplicações como recomendação, predição, classificação, processamento de linguagem natural e reconhecimento de voz e imagem.
+
 Arquivo neuralNetworkTraining.py
 Inicialmente definimos uma série de variáveis de ambiente: número máximo de épocas, número de episódios em um época, número de ações disponíveis, recompensa média, época atual, tamanho do batch, número de sensores e as ações disponíveis
 
@@ -165,6 +168,8 @@ Sempre que o robô toma uma ação, ele recebe uma recompensa relacionada a aç�
 
 O próximo passo é construir a rede neural em si. Em nossa rede, o input é o estado do sensor e o output é a confiança de cada ação ser a melhor escolha para o determinado estado. A rede é composta por uma camada de input com o número de neurônios igual ao número de sensores, uma camada densa composta por 256 neurônios e duas camadas de saída, uma composta por 3 neurônios (logits) e outra por 1 neurônio (value). As camadas logits e value possuem a mesma camada antecessora, e serão utilizadas, respectivamente, nas funções policy approximation e value approximation. Estas funções fazem aproximações numéricas para calcular o custo e atualizar o pesos da rede neural para melhorar a confiança na decisão das ações futuras.
 
+TODO: Talvez fazer um diagrama da rede neural
+
             # Layers
             fc = 256
             activ = tf.nn.elu
@@ -197,7 +202,8 @@ O próximo passo é construir a rede neural em si. Em nossa rede, o input é o e
 
             tf.trainable_variables()
 
-Agora que temos a nossa rede neural, precisamos criar um indivíduo. Para cada indivíduo será armazenado o estado do sensor em cada passo, as suas ações tomadas e as recompensas recebidas. O momento que um indivíduo bate em alguma parede define o fim de um episódio, e nesse momento é criado um novo indivíduo com uma nova posição e uma nova direção. Uma geração é definida por um conjunto de indivíduos tal que no fim do último indivíduo a soma de ações feitas por eles é maior que o batch_size, estabelicida inicialmente em 5000. Ao final de uma geração, os dados armazenados são retornados e servirão para atualizar os pesos da rede neural.
+Agora que temos a nossa rede neural, precisamos criar um indivíduo. Para cada indivíduo será armazenado o estado do sensor em cada passo, as suas ações tomadas e as recompensas recebidas. As decisões de cada indivíduo são baseadas na abordagem de Boltzmann, onde cada ação possui a chance de ser escolhida de acordo com a confiaça dada pela rede, ou seja, em cada passo, quanto maior a confiaça em uma determinada ação, maior será a chance dela ser executada.
+O momento que um indivíduo bate em alguma parede define o fim de um episódio, e nesse momento é criado um novo indivíduo com uma nova posição e uma nova direção. Uma geração é definida por um conjunto de indivíduos tal que no fim do último indivíduo a soma de ações feitas por eles é maior que o batch_size, estabelicida inicialmente em 5000. Ao final de uma geração, os dados armazenados são retornados e servirão para atualizar os pesos da rede neural.
 
             def rollout(batch_size):
                 
@@ -251,9 +257,73 @@ Agora que temos a nossa rede neural, precisamos criar um indivíduo. Para cada i
                 return np.stack(states), np.stack(actions), np.concatenate(rewardsFeed), np.concatenate(discountedRewards), episode_num
 
 
-Já temos o nosso mapa de treinamento e o nosso indivíduo, então vamos definir como o nosso robô irá aprender. Em redes neurais, existe o conceito de custo que representa o quão bom o seu modelo está para um conjunto determinado de dados. Em nosso problema o custo representa o quão duvidoso o robô está em relação a decisão a ser tomada, portanto queremos que em cada geração os pesos da rede neural sejam atualizados a fim de melhorar a confianção nas escolhas das ações, minimizando o custo. O custo é calculado a partir da função sparse_softmax_cross_entropy, essa função assume que as nossas ações disponíveis sejam um conjunto finito e contável e o seu resultado é multiplicado pela diferença entre a recompensa descontada e a saída da camada value, resultando no custo do gradiente de policy approximation. O custo de value approximation é calculado 
+Já temos o nosso mapa de treinamento e o nosso indivíduo, então vamos definir como o nosso robô irá aprender. Em redes neurais, existe o conceito de custo que representa o quão bom o seu modelo está para um conjunto determinado de dados. Em nosso problema o custo representa o quão duvidoso o robô está em relação a decisão a ser tomada, portanto queremos que em cada geração os pesos da rede neural sejam atualizados a fim de melhorar a confiança nas escolhas das ações, minimizando o custo. O custo do policy approximation é calculado a partir da função sparse_softmax_cross_entropy, essa função assume que as nossas ações disponíveis sejam um conjunto finito e contável e o seu resultado é multiplicado pela diferença entre a recompensa descontada e a saída da camada value, resultando no custo do gradiente de policy approximation. O custo de value approximation é calculado a partir da média do quadrado do seu erro. Então o custo total é a soma de todos os custos calculados. A medida que o custo total vai se aporximando de zero, a confiança sobre uma determinada ação vai se aproximando de 100%, lembrando a confiança sobre uma ação é um valor de 0 a 1 e a soma de todas as confianças é sempre 1.
+
+            mean_reward = tf.divide(tf.reduce_sum(R), N)
+
+            # Define Losses
+            pg_loss = tf.reduce_mean((D_R - value) * tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=Y))
+            value_loss = value_scale * tf.reduce_mean(tf.square(D_R - value))
+            entropy_loss = -entropy_scale * tf.reduce_sum(aprob * tf.exp(aprob))
+            loss = pg_loss + value_loss - entropy_loss
+
+            # Create Optimizer
+            optimizer = tf.train.AdamOptimizer(alpha)
+            grads = tf.gradients(loss, tf.trainable_variables())
+            grads, _ = tf.clip_by_global_norm(grads, gradient_clip) # gradient clipping
+            grads_and_vars = list(zip(grads, tf.trainable_variables()))
+            train_op = optimizer.apply_gradients(grads_and_vars)
+
+            # Initialize Session
+            sess = tf.Session()
+            init = tf.global_variables_initializer()
+            sess.run(init)
 
 
+Estamos prontos para começar a treinar o nosso robô. O fluxo de treinamento se inicia com um estado do sensor do robô, este estado é alimentado na rede neural que gera as probabilidades de cada ação ser a melhor escolha no estado dado. Então é executada a ação e gerada uma recompensa e um novo estado do sensor. O novo estado é utilizado para continuar o ciclo de treinamento. No final de uma geração é retornado todos os estados, todas as ações executadas e todas as recompensas colhidas, que são utilizadas para atulizar os peso das rede neural.
 
+            saver = tf.train.Saver(tf.global_variables())
+            load_was_success = True 
 
-Em nosso problema queremos que o nosso robô tenha a confiança sempre proxima de 100% em sua próxima ação, ou seja, temos que atulizar os pesos da rede neural para que  Basicamente queremos que em cada geração os pesos da rede neural sejam atualizados a fim de melhorar a confiança nas ações que serão tomadas. Idealmente queremos que em todas as decisões, o nosso robô tenha 100% de confiança que a decisão a ser tomada seja a melhorO inverso confiança pode ser representada em um número chamado custo, ou seja, a medida que a confiança sobre uma ação vai se aproximando de 100% o custo vai tendendo a zero. O custo é calculado a partir da função sparse_softmax_cross_entropy, essa função assume que as nossas ações disponíveis sejam um conjunto finito e contável e o seu resultado é multiplicado pela diferença entre a recompensa descontada a saída da camada value
+            try:
+                save_dir = '/'.join(save_path.split('/')[:-1])
+                ckpt = tf.train.get_checkpoint_state(save_dir)
+                load_path = ckpt.model_checkpoint_path
+                saver.restore(sess, load_path)
+            except:
+                print("No saved model to load. Starting new session")
+                load_was_success = False
+            else:
+                print("Loaded Model: {}".format(load_path))
+                saver = tf.train.Saver(tf.global_variables())
+                step = int(load_path.split('-')[-1])+1
+
+            while step < n_epochs+1:
+                # Gather Training Data
+                print('Epoch', step)
+                s, a, r, d_r, n = rollout(batch_size)
+                mean_reward = np.sum(r)/n
+                average.append(mean_reward)
+                print('Training Episodes: {}  Average Reward: {:4.2f}  Total Average: {:4.2f}'.format(n, mean_reward, np.mean(average)))
+                      
+                # Update Network
+                sess.run(train_op, feed_dict={X:s, Y:a, D_R: d_r})
+                      
+                # Save Model
+                if step % 10 == 0:
+                      print("SAVED MODEL")
+                      saver.save(sess, save_path, global_step=step)
+                      
+                step += 1
+
+Executando o arquivo neuralNetworkTraining.py iniciaremos o treinamento da rede neural. A cada 10 gerações, o arquivo salva a rede atual em models e este modelo pode ser utlizado para continuar um treinamento que foi interrompido ou para ser utilizado em alguma aplicação. No meu caso, eu deixei a rede treinando em CPU durante mais ou menos 7 horas, até chegar a geração 2540.
+
+Simulação
+Antes passar para um cenário real iremos para um simulador, onde será mais fácil visualizar a rede neural atuando sobre o comportamento do robô. O software que utilizaremos é o v-rep (http://www.coppeliarobotics.com). Com este software é possível simular o robô, os sensores e os obstáculos. Com o v-rep abra a cena obstacle_avoid_3_sensors.ttt localizado na pasta scene, dê um play na cena e em algum terminal execute o arquivo simulationScript.py, este arquivo carrega o ultimo modelo salvo e simula o comportamento do robô, lendo os sensores e tomando decisões, porém ele não atualiza os pesos da rede neural.
+
+TODO: Talvez colocar um GIF mostrando a simulação no v-rep, comparando o robô com o modelo da geração 0 e o robô da geração 2540
+
+Testando
+Para a nosso situação real, utilizamos o Lego Mindstorms NXT, com um sensor utlrasônico em sua região frontal. O ambiente é uma sala com diversas mesas e cadeiras. Inicialmente é necessário se conectar ao Lego Mindstomrs via bluetooth e logo em seguida executar o arquivo main.py. Este arquivo lê o sensor do robô e detecta objetos a uma distância de 50 cm. Com esses dados ele alimenta rede neural, recebe a ação que deve ser tomada e manda comando para os motores de acorda com a decisão feita.
+
+TODO: Mostrar um GIF do robô andando
