@@ -13,6 +13,7 @@ Agora vamos pensar no nosso problema de treinar um robô para explorar o ambient
 ## Ambiente de treinamento
 
 *Arquivo ``trainingMap.py`` do repositório*
+
 Para não complicar as nossas vidas, o ambiente de treinamento é uma matriz 100x100 apenas com 1 e 0, onde 1 representa paredes e 0 espaço vazio, além disso a bordas do mapa são sempre paredes. Nesse caso podemos imaginar que o robô tem um tamanho x e que um passo sempre percorre uma distância igual ao seu comprimento.
 
 ```python
@@ -132,6 +133,7 @@ def nextStep(nextChoice, currentPos, direction):
 Utilizaremos a biblioteca Tensorflow para facilitar a criação de nossa rede neural. O Tensorflow é uma biblioteca de código aberto especializada em computação numérica e utiliza a representação orientada a grafos. Originalmente desenvolvido pelo time Google Brain, era aplicado para pesquisas em aprendizado de máquina e redes neurais profundas. A biblioteca possui uma flexibilidade para atuar em diferentes plataformas como CPUs, GPUs e TPUs e consegue ser aplicado desde de desktops até devices mobile. Hoje, inúmeras empresas utilizam o Tensorflow para aplicações como recomendação, predição, classificação, processamento de linguagem natural e reconhecimento de voz e imagem.
 
 *Arquivo ``neuralNetworkTraining.py`` do repositório*
+
 Inicialmente definimos uma série de variáveis de ambiente: número máximo de épocas, número de episódios em um época, número de ações disponíveis, recompensa média, época atual, tamanho do batch, número de sensores e as ações disponíveis
 
 ```python
