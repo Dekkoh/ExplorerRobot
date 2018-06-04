@@ -190,9 +190,7 @@ def discount(r, gamma, normal):
     return discount
 ```
 
-O próximo passo é construir a rede neural em si. Em nossa rede, o input é o estado do sensor e o output é a confiança de cada ação ser a melhor escolha para o determinado estado. A rede é composta por uma camada de input com o número de neurônios igual ao número de sensores, uma camada densa composta por 256 neurônios e duas camadas de saída, uma composta por 3 neurônios (logits) e outra por 1 neurônio (value). As camadas logits e value possuem a mesma camada antecessora, e serão utilizadas, respectivamente, nas funções policy approximation e value approximation. Estas funções fazem aproximações numéricas para calcular o custo e atualizar o pesos da rede neural para melhorar a confiança na decisão das ações futuras.
-
-TODO: Talvez fazer um diagrama da rede neural
+O próximo passo é construir a rede neural em si. Em nossa rede, o input é o estado do sensor e o output é a confiança de cada ação ser a melhor escolha para o determinado estado. A rede é composta por uma camada de input com o número de neurônios igual ao número de sensores, uma camada densa composta por 256 neurônios e duas camadas de saída, uma composta por 3 neurônios (logits) e outra por 1 neurônio (value). As camadas logits e value possuem a mesma camada antecessora, e serão utilizadas, respectivamente, nas funções policy approximation e value approximation. Estas funções fazem aproximações numéricas para calcular o custo e atualizar o pesos da rede neural para melhorar a confiança na decisão das ações futuras. Além disso, a saída da camada logits também passa pela função softmax e retornando a confiança em cada ação, que é armazenada na variável aprob.
 
 ```python
 # Layers
@@ -227,6 +225,8 @@ aprob = tf.nn.softmax(logits)
 
 tf.trainable_variables()
 ```
+
+![Neural Network](./media/NeuralNetwork.png)
 
 Agora que temos a nossa rede neural, precisamos criar um indivíduo. Para cada indivíduo será armazenado o estado do sensor em cada passo, as suas ações tomadas e as recompensas recebidas. As decisões de cada indivíduo são baseadas na abordagem de Boltzmann, onde cada ação possui a chance de ser escolhida de acordo com a confiaça dada pela rede, ou seja, em cada passo, quanto maior a confiaça em uma determinada ação, maior será a chance dela ser executada.
 
@@ -355,9 +355,15 @@ Executando o arquivo ``neuralNetworkTraining.py`` iniciaremos o treinamento da r
 
 ## Simulação
 
-Antes passar para um cenário real iremos para um simulador, onde será mais fácil visualizar a rede neural atuando sobre o comportamento do robô. O software que utilizaremos é o [V-REP](http://www.coppeliarobotics.com). Com este software é possível simular o robô, os sensores e os obstáculos. Com o v-rep abra a cena ``obstacle_avoid_3_sensors.ttt`` localizado na pasta scene, dê um play na cena e em algum terminal execute o arquivo ``simulationScript.py``, este arquivo carrega o ultimo modelo salvo e simula o comportamento do robô, lendo os sensores e tomando decisões, porém ele não atualiza os pesos da rede neural.
+Antes passar para um cenário real iremos para um simulador, onde será mais fácil visualizar a rede neural atuando sobre o comportamento do robô. O software que utilizaremos é o [V-REP](http://www.coppeliarobotics.com). Com este software é possível simular o robô, os sensores e os obstáculos. Com o v-rep abra a cena ``obstacle_avoid_1_sensors.ttt`` localizado na pasta scene, dê um play na cena e em algum terminal execute o arquivo ``simulationScript.py``, este arquivo carrega o ultimo modelo salvo e simula o comportamento do robô, lendo os sensores e tomando decisões, porém ele não atualiza os pesos da rede neural.
 
-TODO: Talvez colocar um GIF mostrando a simulação no v-rep, comparando o robô com o modelo da geração 0 e o robô da geração 2540
+Esta é a simulação do robô sem inteligência nenhuma, ou seja, na geração 0.
+
+![gen 0 simulation](./media/gen_0.gif)
+
+E esta é a simulação utilizando a geração 2540.
+
+![gen 2540 simulation](./media/gen_2540.gif)
 
 <br/>
 
