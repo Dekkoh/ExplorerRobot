@@ -357,13 +357,11 @@ Executando o arquivo ``neuralNetworkTraining.py`` iniciaremos o treinamento da r
 
 Antes passar para um cenário real iremos para um simulador, onde será mais fácil visualizar a rede neural atuando sobre o comportamento do robô. O software que utilizaremos é o [V-REP](http://www.coppeliarobotics.com). Com este software é possível simular o robô, os sensores e os obstáculos. Com o v-rep abra a cena ``obstacle_avoid_1_sensors.ttt`` localizado na pasta scene, dê um play na cena e em algum terminal execute o arquivo ``simulationScript.py``, este arquivo carrega o ultimo modelo salvo e simula o comportamento do robô, lendo os sensores e tomando decisões, porém ele não atualiza os pesos da rede neural.
 
-Esta é a simulação do robô sem inteligência nenhuma, ou seja, na geração 0.
+Na primeira imagem temos o robô rodando com a inteligência da geração 0. Podemos observar que os movimentos são totalmente aleatório. Já na segunda imagem, temos a simulação utilziando a rede neural na geração 2540.
 
-![gen 0 simulation](./media/gen_0.gif)
+<img src=./media/gen_0.gif width="400" height="400">
 
-E esta é a simulação utilizando a geração 2540.
-
-![gen 2540 simulation](./media/gen_2540.gif)
+<img src=./media/gen_2540.gif width="400" height="400">
 
 <br/>
 
