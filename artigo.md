@@ -62,7 +62,7 @@ def randomInitialDir():
     return direction
 ```
 
-Para simular o nosso sensor, o robô sempre tem a informação do quadrado a sua frente
+Para simular o nosso sensor, o robô sempre tem a informação do quadrado a sua frente, ou seja, o robô "enxerga" até a uma unidade de distância a sua frente.
 
 ```python
 def getState(currentPos, direction):
@@ -81,7 +81,7 @@ def getState(currentPos, direction):
     return state
 ```
 
-E para simular um "passo" é necessário saber a posição atual, a direção atual e qual das 3 ações ele vai tomar, então é retornado o novo estado do sensor, a recompensa pela ação, se o robô bateu ou não, a nova posição e a nova direção. As recompensas são definidas por +5 se o robô andou e não bateu, +1 se o robô girou para qualquer das direções, e -30 se o robô andou para frente e bateu.
+E para simular um "passo" é necessário saber a posição atual, a direção atual e qual das 3 ações ele vai tomar, então é retornado o novo estado do sensor, a recompensa pela ação, se o robô bateu ou não, a nova posição e a nova direção. As recompensas são definidas por +5 se o robô andou e não bateu, +1 se o robô girou para qualquer das direções, e -30 se o robô andou para frente e bateu. Os valores da recompensas são arbitrárias e dependem de quanto uma recompensa deve valer em relação a outra.
 
 ```python
 def nextStep(nextChoice, currentPos, direction):
@@ -368,4 +368,3 @@ Na primeira imagem temos o robô rodando com a inteligência da geração 0. Pod
 
 Para a nosso situação real, utilizamos o Lego Mindstorms NXT, com um sensor utlrasônico em sua região frontal. O ambiente é uma sala com diversas mesas e cadeiras. Inicialmente é necessário se conectar ao Lego Mindstomrs via bluetooth e logo em seguida executar o arquivo ``main.py``. Este arquivo lê o sensor do robô e detecta objetos a uma distância de 50 cm. Com esses dados ele alimenta rede neural, recebe a ação que deve ser tomada e manda comando para os motores de acorda com a decisão feita.
 
-TODO: Mostrar um GIF do robô andando
