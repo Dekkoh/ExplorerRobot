@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 import random
 
-import trainingMap
+import training_map
 
 # Environment Parameters
 n_epochs = 5000
@@ -75,15 +75,15 @@ tf.trainable_variables()
 
 def rollout(batch_size):
     
-    states, actions, rewards, rewardsFeed, discountedRewards = [], [], [], [], []
+    states, actions, rewards, rewards_feed, discounted_rewards = [], [], [], [], []
     episode_num = 1
     action_repeat = 1
     reward = 0
 
-    trainingMap.generateMap()
-    currentPos = trainingMap.randomInitalPos()
-    direction = trainingMap.randomInitialDir()
-    state = trainingMap.getState(currentPos, direction)
+    area_map = training_map.generate_map()
+    x_pos, y_pos = training_map.random_inital_pos(area_map)
+    direction = training_map.random_initial_dir()
+    state = training_map.get_state(area_map, x_pos, y_pos, direction)
     
     while True: 
         # Run State Through Policy & Calculate Action
@@ -93,7 +93,7 @@ def rollout(batch_size):
         
         # Perform Action
         for i in range(action_repeat):
-            state2, reward2, done, currentPos, direction = trainingMap.nextStep(choice[action], currentPos, direction)
+            state2, reward2, done, x_pos, y_pos, direction = training_map.next_step(area_map, choice[action], x_pos, y_pos, direction)
             reward += reward2
             if done:
                 break
@@ -109,20 +109,20 @@ def rollout(batch_size):
         
         if done:
             # Track Discounted Rewards
-            rewardsFeed.append(rewards)
-            discountedRewards.append(discount(rewards, gamma, normalize_r))
+            rewards_feed.append(rewards)
+            discounted_rewards.append(discount(rewards, gamma, normalize_r))
             
-            if len(np.concatenate(rewardsFeed)) > batch_size:
+            if len(np.concatenate(rewards_feed)) > batch_size:
                 break
                 
             # Reset Environment
-            currentPos = trainingMap.randomInitalPos()
-            direction = trainingMap.randomInitialDir()
-            state = trainingMap.getState(currentPos, direction)
+            x_pos, y_pos = training_map.random_inital_pos(area_map)
+            direction = training_map.random_initial_dir()
+            state = training_map.get_state(area_map, x_pos, y_pos, direction)
             rewards = []
             episode_num += 1
                          
-    return np.stack(states), np.stack(actions), np.concatenate(rewardsFeed), np.concatenate(discountedRewards), episode_num
+    return np.stack(states), np.stack(actions), np.concatenate(rewards_feed), np.concatenate(discounted_rewards), episode_num
 
 mean_reward = tf.divide(tf.reduce_sum(R), N)
 

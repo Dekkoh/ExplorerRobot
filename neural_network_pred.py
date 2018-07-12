@@ -106,7 +106,7 @@ else:
     saver = tf.train.Saver(tf.global_variables())
     step = int(load_path.split('-')[-1])+1
 
-def nextChoice(state):
+def next_choice(state):
     state = np.array(state).reshape(1,sensor_number)
 
     feed = {X: state}

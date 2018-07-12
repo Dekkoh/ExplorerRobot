@@ -18,7 +18,7 @@ Agora vamos pensar no nosso problema de treinar um robô para explorar o ambient
 
 ## Ambiente de treinamento
 
-*Arquivo ``trainingMap.py`` do repositório*
+*Arquivo ``training_map.py`` do repositório*
 
 Para não complicar as nossas vidas, o ambiente de treinamento é uma matriz 100x100 apenas com 1 e 0, onde 1 representa paredes e 0 espaço vazio. O mapa é gerado aleatoriamente com uma proporção de 4 espaços para 1 parede, porém as bordas do mapa são sempre paredes. Nesse caso podemos imaginar que o robô tem um tamanho de uma unidade e que ao andar, ele percorre sempre uma unidade de cada vez.
 
@@ -27,43 +27,44 @@ import random
 import numpy as np
 from scipy.sparse import rand
 
-mapSize = [100, 100]
-mapDensity = 0.2
-areaMap = np.ones([mapSize[0], mapSize[1]])
+length = 100
+width = 100
+map_density = 0.2
 
-def generateMap():
-    newMap = rand(mapSize[0], mapSize[1], density=mapDensity)
-    newMap.data[:] = 1
-    newMap = np.array(newMap.A)
-    newMap = newMap.astype(int)
-    newMap[:][0] = 1
-    newMap[:][mapSize[1] - 1] = 1
-    newMap[:,0] = 1
-    newMap[:,mapSize[0] - 1] = 1
+def generate_map():
+    new_map = rand(length, width, density=map_density)
+    new_map.data[:] = 1
+    new_map = np.array(new_map.A)
+    new_map = new_map.astype(int)
+    new_map[:][0] = 1
+    new_map[:][width - 1] = 1
+    new_map[:,0] = 1
+    new_map[:,length - 1] = 1
 
-    global areaMap
-    areaMap = newMap
+    return new_map
 ```
 
 O nosso robô é inicializado com posição e com direção aleatórias, onde a direção 1 é para cima, 2 para direita, 3 para baixo e 4 para esquerda
 
 ```python
-def randomInitalPos():
+def random_inital_pos(area_map):
 
     done = False
-    currentPos = [-1, -1]
+    x_pos = -1
+    y_pos = -1
 
     while(not done):
-        i = random.randint(1,len(areaMap) - 2)
-        j = random.randint(1,len(areaMap[0]) - 2)
-        if (areaMap[i][j] == 0):
-            currentPos = [i, j]
+        i = random.randint(1,len(area_map) - 2)
+        j = random.randint(1,len(area_map[0]) - 2)
+        if (area_map[i][j] == 0):
+            x_pos = i
+            y_pos = j
             done = True
 
-    return currentPos
+    return x_pos, y_pos
 
 
-def randomInitialDir():
+def random_initial_dir():
     direction = random.randint(1,4)
     return direction
 ```
@@ -71,18 +72,18 @@ def randomInitialDir():
 Para simular o nosso sensor, o robô sempre tem a informação do quadrado a sua frente, ou seja, o robô "enxerga" até a uma unidade de distância a sua frente.
 
 ```python
-def getState(currentPos, direction):
+def get_state(area_map, x_pos, y_pos, direction):
 
     state = np.zeros([1,1])
 
     if (direction == 1):
-        state[0][0] = areaMap[currentPos[0] - 1][currentPos[1]]
+        state[0][0] = area_map[x_pos - 1][y_pos]
     elif (direction == 2):
-        state[0][0] = areaMap[currentPos[0]][currentPos[1] + 1]
+        state[0][0] = area_map[x_pos][y_pos + 1]
     elif (direction == 3):
-        state[0][0] = areaMap[currentPos[0] + 1][currentPos[1]]
+        state[0][0] = area_map[x_pos + 1][y_pos]
     elif (direction == 4):
-        state[0][0] = areaMap[currentPos[0]][currentPos[1] - 1]
+        state[0][0] = area_map[x_pos][y_pos - 1]
 
     return state
 ```
@@ -90,46 +91,48 @@ def getState(currentPos, direction):
 E para simular um "passo" é necessário saber a posição atual, a direção atual e qual das 3 ações ele vai tomar, então é retornado o novo estado do sensor, a recompensa pela ação, se o robô bateu ou não, a nova posição e a nova direção. As recompensas são definidas por +5 se o robô andou e não bateu, +1 se o robô girou para qualquer das direções, e -30 se o robô andou para frente e bateu. Os valores da recompensas são arbitrárias e dependem de quanto uma recompensa deve valer em relação a outra.
 
 ```python
-def nextStep(nextChoice, currentPos, direction):
-    lastPos = currentPos
-    lastDir = direction
-    lastState = getState(lastPos, lastDir)
+def next_step(area_map, next_choice, x_pos, y_pos, direction):
+    last_x_pos = x_pos
+    last_y_pos = y_pos
+    last_dir = direction
+    last_state = get_state(area_map, x_pos, y_pos, last_dir)
 
-    if (nextChoice == 'forward'):
+    if (next_choice == 'forward'):
         if (direction == 1):
-            currentPos[0] -= 1
+            x_pos -= 1
         elif (direction == 2):
-            currentPos[1] += 1
+            y_pos += 1
         elif (direction == 3):
-            currentPos[0] += 1
+            x_pos += 1
         elif (direction == 4):
-            currentPos[1] -= 1
-    elif (nextChoice == 'right'):
+            y_pos -= 1
+    elif (next_choice == 'right'):
         direction += 1
         if (direction > 4):
             direction = 1
-    elif (nextChoice == 'left'):
+    elif (next_choice == 'left'):
         direction -= 1
         if (direction < 1):
             direction = 4
 
     state = np.zeros(1)
 
-    if (areaMap[currentPos[0]][currentPos[1]] == 1):
+    if (area_map[x_pos][y_pos] == 1):
         done = True
-        direction = lastDir
-        currentPos = lastPos
-        state = lastState
+        direction = last_dir
+        x_pos = last_x_pos
+        y_pos = last_y_pos
+        state = last_state
         reward = -30
     else:
         done = False
-        state = getState(currentPos, direction)
-        if (nextChoice == 'forward'):
+        state = get_state(area_map, x_pos, y_pos, direction)
+        if (next_choice == 'forward'):
             reward = 5
         else:
             reward = 1
 
-    return state, reward, done, currentPos, direction
+    return state, reward, done, x_pos, y_pos, direction
 ```
 
 <br/>
@@ -138,7 +141,7 @@ def nextStep(nextChoice, currentPos, direction):
 
 Utilizaremos a biblioteca Tensorflow para facilitar a criação de nossa rede neural. O Tensorflow é uma biblioteca de código aberto especializada em computação numérica e utiliza a representação orientada a grafos. Originalmente desenvolvido pelo time Google Brain, era aplicado para pesquisas em aprendizado de máquina e redes neurais profundas. A biblioteca possui uma flexibilidade para atuar em diferentes plataformas como CPUs, GPUs e TPUs e consegue ser aplicado desde de desktops até devices mobile. Hoje, inúmeras empresas utilizam o Tensorflow para aplicações como recomendação, predição, classificação, processamento de linguagem natural e reconhecimento de voz e imagem.
 
-*Arquivo ``neuralNetworkTraining.py`` do repositório*
+*Arquivo ``neural_network_training.py`` do repositório*
 
 Inicialmente definimos uma série de variáveis de ambiente: número máximo de épocas, número de episódios em um época, número de ações disponíveis, recompensa média, época atual, tamanho do batch, número de sensores e as ações disponíveis
 
@@ -147,8 +150,7 @@ import tensorflow as tf
 import numpy as np
 import random
 
-import trainingMap
-
+import training_map
 
 # Environment Parameters
 n_epochs = 5000
@@ -241,15 +243,15 @@ O momento que um indivíduo bate em alguma parede define o fim de um episódio, 
 ```python
 def rollout(batch_size):
     
-    states, actions, rewards, rewardsFeed, discountedRewards = [], [], [], [], []
+    states, actions, rewards, rewards_feed, discounted_rewards = [], [], [], [], []
     episode_num = 1
     action_repeat = 1
     reward = 0
 
-    trainingMap.generateMap()
-    currentPos = trainingMap.randomInitalPos()
-    direction = trainingMap.randomInitialDir()
-    state = trainingMap.getState(currentPos, direction)
+    area_map = training_map.generate_map()
+    x_pos, y_pos = training_map.random_inital_pos(area_map)
+    direction = training_map.random_initial_dir()
+    state = training_map.get_state(area_map, x_pos, y_pos, direction)
     
     while True: 
         # Run State Through Policy & Calculate Action
@@ -259,7 +261,7 @@ def rollout(batch_size):
         
         # Perform Action
         for i in range(action_repeat):
-            state2, reward2, done, currentPos, direction = trainingMap.nextStep(choice[action], currentPos, direction)
+            state2, reward2, done, x_pos, y_pos, direction = training_map.next_step(area_map, choice[action], x_pos, y_pos, direction)
             reward += reward2
             if done:
                 break
@@ -275,20 +277,20 @@ def rollout(batch_size):
         
         if done:
             # Track Discounted Rewards
-            rewardsFeed.append(rewards)
-            discountedRewards.append(discount(rewards, gamma, normalize_r))
+            rewards_feed.append(rewards)
+            discounted_rewards.append(discount(rewards, gamma, normalize_r))
             
-            if len(np.concatenate(rewardsFeed)) > batch_size:
+            if len(np.concatenate(rewards_feed)) > batch_size:
                 break
                 
             # Reset Environment
-            currentPos = trainingMap.randomInitalPos()
-            direction = trainingMap.randomInitialDir()
-            state = trainingMap.getState(currentPos, direction)
+            x_pos, y_pos = training_map.random_inital_pos(area_map)
+            direction = training_map.random_initial_dir()
+            state = training_map.get_state(area_map, x_pos, y_pos, direction)
             rewards = []
             episode_num += 1
                          
-    return np.stack(states), np.stack(actions), np.concatenate(rewardsFeed), np.concatenate(discountedRewards), episode_num
+    return np.stack(states), np.stack(actions), np.concatenate(rewards_feed), np.concatenate(discounted_rewards), episode_num
 ```
 
 Já temos o nosso mapa de treinamento e o nosso indivíduo, então vamos definir como o nosso robô irá aprender. Em redes neurais, existe o conceito de custo que representa o quão bom o seu modelo está para um conjunto determinado de dados. Em nosso problema o custo representa o quão duvidoso o robô está em relação a decisão a ser tomada, portanto queremos que em cada geração os pesos da rede neural sejam atualizados a fim de melhorar a confiança nas escolhas das ações, minimizando o custo.
@@ -355,13 +357,13 @@ while step < n_epochs+1:
     step += 1
 ```
 
-Executando o arquivo ``neuralNetworkTraining.py`` iniciaremos o treinamento da rede neural. A cada 10 gerações, o arquivo salva a rede atual em models e este modelo pode ser utlizado para continuar um treinamento que foi interrompido ou para ser utilizado em alguma aplicação. No meu caso, eu deixei a rede treinando em CPU durante mais ou menos 7 horas, até chegar a geração 2540.
+Executando o arquivo ``neural_network_training.py`` iniciaremos o treinamento da rede neural. A cada 10 gerações, o arquivo salva a rede atual em models e este modelo pode ser utlizado para continuar um treinamento que foi interrompido ou para ser utilizado em alguma aplicação. No meu caso, eu deixei a rede treinando em CPU durante mais ou menos 7 horas, até chegar a geração 2540.
 
 <br/>
 
 ## Simulação
 
-Antes passar para um cenário real iremos para um simulador, onde será mais fácil visualizar a rede neural atuando sobre o comportamento do robô. O software que utilizaremos é o [V-REP](http://www.coppeliarobotics.com). Com este software é possível simular o robô, os sensores e os obstáculos. Com o v-rep abra a cena ``obstacle_avoid_1_sensors.ttt`` localizado na pasta scene, dê um play na cena e em algum terminal execute o arquivo ``simulationScript.py``, este arquivo carrega o último modelo salvo e simula o comportamento do robô, lendo os sensores e tomando decisões, porém ele não atualiza os pesos da rede neural.
+Antes passar para um cenário real iremos para um simulador, onde será mais fácil visualizar a rede neural atuando sobre o comportamento do robô. O software que utilizaremos é o [V-REP](http://www.coppeliarobotics.com). Com este software é possível simular o robô, os sensores e os obstáculos. Com o v-rep abra a cena ``obstacle_avoid_1_sensors.ttt`` localizado na pasta scene, dê um play na cena e em algum terminal execute o arquivo ``simulation_script.py``, este arquivo carrega o último modelo salvo e simula o comportamento do robô, lendo os sensores e tomando decisões, porém ele não atualiza os pesos da rede neural.
 
 Na primeira imagem temos o robô rodando com a inteligência da geração 0. Podemos observar que os movimentos são totalmente aleatório. Já na segunda imagem, temos a simulação utilizando a rede neural na geração 2540.
 <p>

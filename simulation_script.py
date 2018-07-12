@@ -4,9 +4,8 @@ import sys
 import time                #used to keep track of time
 import numpy as np         #array library
 import math
-import matplotlib as mpl   #used for image plotting
 
-import neuralNetworkPred as nn
+import neural_network_pred as nn
 
 #Pre-Allocation
 
@@ -54,7 +53,7 @@ while True:
     state = list(map(lambda x : 1 if x > 10e-5 else 0, sensor_val))
     state = np.array(state).reshape(1,sensor_number)
 
-    choice = nn.nextChoice(state)
+    choice = nn.next_choice(state)
 
     if choice == 'left':
         vr = 0.5

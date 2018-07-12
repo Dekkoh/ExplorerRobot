@@ -2,125 +2,120 @@ import random
 import numpy as np
 from scipy.sparse import rand
 
-mapSize = [100, 100]
-mapDensity = 0.2
-areaMap = np.ones([mapSize[0], mapSize[1]])
+length = 100
+width = 100
+map_density = 0.2
 
-def generateMap():
-    newMap = rand(mapSize[0], mapSize[1], density=mapDensity)
-    newMap.data[:] = 1
-    newMap = np.array(newMap.A)
-    newMap = newMap.astype(int)
-    newMap[:][0] = 1
-    newMap[:][mapSize[1] - 1] = 1
-    newMap[:,0] = 1
-    newMap[:,mapSize[0] - 1] = 1
+def generate_map():
+    new_map = rand(length, width, density=map_density)
+    new_map.data[:] = 1
+    new_map = np.array(new_map.A)
+    new_map = new_map.astype(int)
+    new_map[:][0] = 1
+    new_map[:][width - 1] = 1
+    new_map[:,0] = 1
+    new_map[:,length - 1] = 1
 
-    global areaMap
-    areaMap = newMap
+    return new_map
 
 
-def getState(currentPos, direction):
+def get_state(area_map, x_pos, y_pos, direction):
 
     state = np.zeros([1,1])
 
     if (direction == 1):
-        state[0][0] = areaMap[currentPos[0] - 1][currentPos[1]]
-        # state[0][1] = areaMap[currentPos[0]][currentPos[1] - 1]
-        # state[0][2] = areaMap[currentPos[0]][currentPos[1] + 1]
+        state[0][0] = area_map[x_pos - 1][y_pos]
     elif (direction == 2):
-        state[0][0] = areaMap[currentPos[0]][currentPos[1] + 1]
-        # state[0][1] = areaMap[currentPos[0] - 1][currentPos[1]]
-        # state[0][2] = areaMap[currentPos[0] + 1][currentPos[1]]
+        state[0][0] = area_map[x_pos][y_pos + 1]
     elif (direction == 3):
-        state[0][0] = areaMap[currentPos[0] + 1][currentPos[1]]
-        # state[0][1] = areaMap[currentPos[0]][currentPos[1] + 1]
-        # state[0][2] = areaMap[currentPos[0]][currentPos[1] - 1]
+        state[0][0] = area_map[x_pos + 1][y_pos]
     elif (direction == 4):
-        state[0][0] = areaMap[currentPos[0]][currentPos[1] - 1]
-        # state[0][1] = areaMap[currentPos[0] + 1][currentPos[1]]
-        # state[0][2] = areaMap[currentPos[0] - 1][currentPos[1]]
+        state[0][0] = area_map[x_pos][y_pos - 1]
 
     return state
 
-def randomInitalPos():
+def random_inital_pos(area_map):
 
     done = False
-    currentPos = [-1, -1]
+    x_pos = -1
+    y_pos = -1
 
     while(not done):
-        i = random.randint(1,len(areaMap) - 2)
-        j = random.randint(1,len(areaMap[0]) - 2)
-        if (areaMap[i][j] == 0):
-            currentPos = [i, j]
+        i = random.randint(1,len(area_map) - 2)
+        j = random.randint(1,len(area_map[0]) - 2)
+        if (area_map[i][j] == 0):
+            x_pos = i
+            y_pos = j
             done = True
 
-    return currentPos
+    return x_pos, y_pos
 
 
-def randomInitialDir():
+def random_initial_dir():
     direction = random.randint(1,4)
     return direction
 
 
-def printValidation(currentPos, direction):
+def print_validation(area_map, x_pos, y_pos, direction):
 
-    dirString = ['Up', 'Right', 'Down', 'Left']
+    dir_string = ['Up', 'Right', 'Down', 'Left']
 
-    print('{}\n'.format(dirString[direction-1]))
+    print('{}\n'.format(dir_string[direction-1]))
 
     s = ''
 
-    for i in range(len(areaMap)):
-        for j in range(len(areaMap[0])):
-            if (currentPos[0] == i and currentPos[1] == j):
+    for i in range(len(area_map)):
+        for j in range(len(area_map[0])):
+            if (x_pos == i and y_pos == j):
                 s = s + '*'
-            elif (areaMap[i][j] == 0):
+            elif (area_map[i][j] == 0):
                 s = s + '.'
             else:
-                s = s + str(areaMap[i][j])
+                s = s + str(area_map[i][j])
             s = s + ' '
         s = s + '\n'
 
     print(s)
 
-def nextStep(nextChoice, currentPos, direction):
-    lastPos = currentPos
-    lastDir = direction
-    lastState = getState(lastPos, lastDir)
+def next_step(area_map, next_choice, x_pos, y_pos, direction):
+    last_x_pos = x_pos
+    last_y_pos = y_pos
+    last_dir = direction
+    last_state = get_state(area_map, x_pos, y_pos, last_dir)
 
-    if (nextChoice == 'forward'):
+    if (next_choice == 'forward'):
         if (direction == 1):
-            currentPos[0] -= 1
+            x_pos -= 1
         elif (direction == 2):
-            currentPos[1] += 1
+            y_pos += 1
         elif (direction == 3):
-            currentPos[0] += 1
+            x_pos += 1
         elif (direction == 4):
-            currentPos[1] -= 1
-    elif (nextChoice == 'right'):
+            y_pos -= 1
+    elif (next_choice == 'right'):
         direction += 1
         if (direction > 4):
             direction = 1
-    elif (nextChoice == 'left'):
+    elif (next_choice == 'left'):
         direction -= 1
         if (direction < 1):
             direction = 4
 
     state = np.zeros(1)
 
-    if (areaMap[currentPos[0]][currentPos[1]] == 1):
+    if (area_map[x_pos][y_pos] == 1):
         done = True
-        direction = lastDir
-        currentPos = lastPos
-        state = lastState
+        direction = last_dir
+        x_pos = last_x_pos
+        y_pos = last_y_pos
+        state = last_state
         reward = -30
     else:
         done = False
-        state = getState(currentPos, direction)
-        if (nextChoice == 'forward'):
+        state = get_state(area_map, x_pos, y_pos, direction)
+        if (next_choice == 'forward'):
             reward = 5
         else:
             reward = 1
 
-    return state, reward, done, currentPos, direction
+    return state, reward, done, x_pos, y_pos, direction
