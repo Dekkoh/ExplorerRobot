@@ -381,3 +381,5 @@ Para a nossa situação real, utilizamos o Lego Mindstorms NXT, com um sensor ul
 ## Conclusão
 
 O experimento mostrou que a utilização do treinamento por reforço com redes neurais é plausível para aplicações reais. A rede neural treinada teve um desempenho bom quanto a sua adaptação em diferentes circunstâncias (treinamento, simulação e situação real), porém possui um tempo de desenvolvimento muito maior do que uma solução mais simples, principalmente pelo fato que uma rede neural pode demorar um tempo consideravelmente alto para treinar. Assim sendo o nosso resultado obtido foi simples, porém eficaz, e mostrou que possui potencial para solucionar problemas mais complexos dadas suas devidas alterações.
+
+E para os interessados, o código completo do projeto está disponível no [GitHub](https://github.com/Dekkoh/ExplorerRobot).
